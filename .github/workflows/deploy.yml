@@ -41,9 +41,9 @@ jobs:
 
             echo "=== Restarting server via PM2 ==="
             cd ../server
-            # --update-env ensures .env changes are picked up on every deploy
+            # Pass config file so PM2 re-reads it (triggers dotenv.config() → picks up .env)
             pm2 describe karaoke-server > /dev/null 2>&1 \
-              && pm2 restart karaoke-server --update-env \
+              && pm2 restart ecosystem.config.cjs \
               || pm2 start ecosystem.config.cjs
             pm2 save
 
