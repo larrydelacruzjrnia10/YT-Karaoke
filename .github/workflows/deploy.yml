@@ -41,9 +41,9 @@ jobs:
 
             echo "=== Restarting server via PM2 ==="
             cd ../server
-            # Start if not running, restart if already up
+            # --update-env ensures .env changes are picked up on every deploy
             pm2 describe karaoke-server > /dev/null 2>&1 \
-              && pm2 restart karaoke-server \
+              && pm2 restart karaoke-server --update-env \
               || pm2 start ecosystem.config.cjs
             pm2 save
 

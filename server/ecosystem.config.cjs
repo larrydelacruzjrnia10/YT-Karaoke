@@ -1,5 +1,7 @@
-// PM2 process config — used both by the deploy workflow and manual starts.
-// Place this file at /var/www/karaoke/server/ on the VPS.
+// PM2 process config. Explicitly reads .env so env vars survive auto-deploys.
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
 module.exports = {
   apps: [
     {
@@ -12,7 +14,9 @@ module.exports = {
       max_memory_restart: '256M',
       env: {
         NODE_ENV: 'production',
-        PORT: 3001,
+        PORT: process.env.PORT || 3001,
+        YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY || '',
+        MAX_RESERVATIONS_PER_USER: process.env.MAX_RESERVATIONS_PER_USER || '3',
       },
     },
   ],
