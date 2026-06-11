@@ -5,7 +5,7 @@ const http = require('http');
 const { WebSocketServer } = require('ws');
 
 const db = require('./db');
-const { parseVideoId, searchYouTube, fetchVideoMeta } = require('./youtube');
+const { parseVideoId, searchYouTube, fetchVideoMeta, getSuggestions } = require('./youtube');
 
 const PORT = process.env.PORT || 3001;
 const MAX_PER_USER = parseInt(process.env.MAX_RESERVATIONS_PER_USER || '3', 10);
@@ -37,6 +37,13 @@ function broadcast() {
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, hasApiKey: !!process.env.YOUTUBE_API_KEY });
+});
+
+// Autocomplete suggestions — proxied from Google, zero YouTube quota cost
+app.get('/api/suggest', async (req, res) => {
+  const q = (req.query.q || '').trim();
+  const suggestions = await getSuggestions(q);
+  res.json({ suggestions });
 });
 
 app.get('/api/search', async (req, res) => {

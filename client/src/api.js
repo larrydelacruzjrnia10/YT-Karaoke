@@ -24,6 +24,7 @@ async function apiFetch(path, opts = {}) {
 export const api = {
   health: () => apiFetch('/api/health'),
   search: q => apiFetch(`/api/search?q=${encodeURIComponent(q)}`),
+  suggest: q => apiFetch(`/api/suggest?q=${encodeURIComponent(q)}`),
   queue: () => apiFetch('/api/queue'),
   reserve: body => apiFetch('/api/reserve', { method: 'POST', body: JSON.stringify(body) }),
   remove: body => apiFetch('/api/remove', { method: 'POST', body: JSON.stringify(body) }),

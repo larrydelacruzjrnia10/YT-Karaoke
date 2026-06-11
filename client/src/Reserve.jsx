@@ -4,6 +4,8 @@ import { api, getSessionId } from './api';
 export default function Reserve() {
   const [name, setName] = useState(() => localStorage.getItem('karaoke_name') || '');
   const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [results, setResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [link, setLink] = useState('');
@@ -11,10 +13,23 @@ export default function Reserve() {
   const [reservingId, setReservingId] = useState(null);
   const [toasts, setToasts] = useState([]);
   const toastId = useRef(0);
+  const debounceRef = useRef(null);
+  const searchWrapRef = useRef(null);
 
   useEffect(() => {
     localStorage.setItem('karaoke_name', name);
   }, [name]);
+
+  // Close suggestions when clicking outside the search box
+  useEffect(() => {
+    function onClickOutside(e) {
+      if (searchWrapRef.current && !searchWrapRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
 
   function addToast(msg, type = 'success') {
     const id = ++toastId.current;
@@ -22,13 +37,44 @@ export default function Reserve() {
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 3500);
   }
 
-  async function handleSearch(e) {
-    e.preventDefault();
-    if (!query.trim()) return;
+  function handleQueryChange(e) {
+    const val = e.target.value;
+    setQuery(val);
+
+    // Debounce: wait 300 ms after the user stops typing before fetching suggestions
+    clearTimeout(debounceRef.current);
+    if (val.trim().length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const data = await api.suggest(val.trim());
+        setSuggestions(data.suggestions || []);
+        setShowSuggestions((data.suggestions || []).length > 0);
+      } catch {
+        setSuggestions([]);
+      }
+    }, 300);
+  }
+
+  function pickSuggestion(s) {
+    setQuery(s);
+    setSuggestions([]);
+    setShowSuggestions(false);
+    // Auto-trigger the search when a suggestion is tapped
+    runSearch(s);
+  }
+
+  async function runSearch(q) {
+    const trimmed = (q || query).trim();
+    if (!trimmed) return;
     setSearching(true);
     setResults([]);
+    setShowSuggestions(false);
     try {
-      const data = await api.search(query.trim());
+      const data = await api.search(trimmed);
       setResults(data.results || []);
       if (!data.results?.length) addToast('Walang nahanap. Subukan ng ibang keyword.', 'error');
     } catch (err) {
@@ -36,6 +82,11 @@ export default function Reserve() {
     } finally {
       setSearching(false);
     }
+  }
+
+  async function handleSearch(e) {
+    e.preventDefault();
+    runSearch(query);
   }
 
   async function handleReserve(video) {
@@ -75,7 +126,6 @@ export default function Reserve() {
 
   return (
     <div className="page">
-      {/* Toast container */}
       <div className="toasts">
         {toasts.map(t => (
           <div key={t.id} className={`toast toast--${t.type}`}>{t.msg}</div>
@@ -94,16 +144,35 @@ export default function Reserve() {
         />
       </div>
 
-      {/* Search */}
+      {/* Search with autocomplete */}
       <div className="field">
         <label className="field-label">Type ang kanta (o artist):</label>
-        <form className="search-row" onSubmit={handleSearch}>
-          <input
-            className="input"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Hal. Tensionado karaoke"
-          />
+        <form className="search-row" onSubmit={handleSearch} ref={searchWrapRef}>
+          <div className="suggest-wrap">
+            <input
+              className="input"
+              value={query}
+              onChange={handleQueryChange}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              onKeyDown={e => e.key === 'Escape' && setShowSuggestions(false)}
+              placeholder="Hal. Tensionado karaoke"
+              autoComplete="off"
+            />
+            {showSuggestions && suggestions.length > 0 && (
+              <ul className="suggest-dropdown">
+                {suggestions.map((s, i) => (
+                  <li
+                    key={i}
+                    className="suggest-item"
+                    onMouseDown={() => pickSuggestion(s)}
+                  >
+                    <span className="suggest-icon">🔍</span>
+                    {s}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <button className="btn btn--primary" type="submit" disabled={searching}>
             {searching ? '...' : 'Hanapin'}
           </button>

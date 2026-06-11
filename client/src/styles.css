@@ -139,8 +139,44 @@ input {
 .input::placeholder { color: var(--text-muted); }
 .input:focus { border-color: var(--accent-purple); }
 
-.search-row { display: flex; gap: 10px; }
+.search-row { display: flex; gap: 10px; align-items: flex-start; }
 .search-row .input { flex: 1; }
+
+/* ─── Autocomplete suggest dropdown ─────────────────────────────────────── */
+.suggest-wrap { position: relative; flex: 1; }
+.suggest-wrap .input { width: 100%; }
+
+.suggest-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-card2);
+  border: 1.5px solid var(--accent-purple);
+  border-radius: var(--radius);
+  list-style: none;
+  z-index: 200;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  animation: fadeSlideIn 0.15s ease;
+}
+
+.suggest-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.1s;
+  border-bottom: 1px solid var(--border);
+}
+
+.suggest-item:last-child { border-bottom: none; }
+.suggest-item:hover, .suggest-item:active { background: var(--accent-purple); color: #fff; }
+
+.suggest-icon { font-size: 0.75rem; opacity: 0.6; flex-shrink: 0; }
 
 /* ─── Buttons ────────────────────────────────────────────────────────────── */
 .btn {

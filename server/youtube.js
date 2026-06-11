@@ -101,4 +101,19 @@ async function fetchVideoMeta(videoId) {
   }
 }
 
-module.exports = { parseVideoId, searchYouTube, fetchVideoMeta };
+// Fetch autocomplete suggestions from Google's public suggest API.
+// Uses the same data source as YouTube's own search bar.
+// Costs zero YouTube Data API quota units.
+async function getSuggestions(query) {
+  if (!query || query.trim().length < 2) return [];
+  try {
+    const url = `https://suggestqueries.google.com/complete/search?client=firefox&ds=yt&q=${encodeURIComponent(query.trim())}`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+    const data = await res.json();
+    return (data[1] || []).slice(0, 8);
+  } catch {
+    return [];
+  }
+}
+
+module.exports = { parseVideoId, searchYouTube, fetchVideoMeta, getSuggestions };
