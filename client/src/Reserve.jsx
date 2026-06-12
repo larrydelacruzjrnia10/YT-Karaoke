@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { api, getSessionId } from './api';
 
-export default function Reserve() {
+export default function Reserve({ roomId }) {
   const [name, setName] = useState(() => localStorage.getItem('karaoke_name') || '');
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -96,6 +96,7 @@ export default function Reserve() {
       await api.reserve({
         name: name.trim(),
         sessionId: getSessionId(),
+        roomId,
         videoId: video.videoId,
         title: video.title,
         thumbnail: video.thumbnail,
@@ -114,7 +115,7 @@ export default function Reserve() {
     if (!link.trim()) { addToast('I-paste ang YouTube link.', 'error'); return; }
     setLinkReserving(true);
     try {
-      await api.reserve({ name: name.trim(), sessionId: getSessionId(), link: link.trim() });
+      await api.reserve({ name: name.trim(), sessionId: getSessionId(), roomId, link: link.trim() });
       addToast('Na-reserve ang kanta mula sa link!');
       setLink('');
     } catch (err) {

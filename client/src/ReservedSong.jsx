@@ -2,8 +2,8 @@ import { useState, useRef } from 'react';
 import { useLiveQueue } from './useLiveQueue';
 import { api, getSessionId } from './api';
 
-export default function ReservedSong() {
-  const { queue, max, wsStatus } = useLiveQueue();
+export default function ReservedSong({ roomId }) {
+  const { queue, max, wsStatus } = useLiveQueue(roomId);
   const [removing, setRemoving] = useState(null);
   const [toasts, setToasts] = useState([]);
   const toastId = useRef(0);

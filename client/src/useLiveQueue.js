@@ -4,11 +4,11 @@ import { api, getWsUrl } from './api';
 const POLL_INTERVAL = 4000;
 const RECONNECT_DELAY = 3000;
 
-// Opens a WebSocket to receive live queue snapshots.
+// Opens a WebSocket scoped to `roomId` (pass null for the legacy global queue).
 // Falls back to polling /api/queue every 4 s if the socket is down.
-// Returns { queue, nowPlaying, max, wsStatus: 'connected'|'connecting'|'polling' }
-export function useLiveQueue() {
-  const [state, setState] = useState({ queue: [], nowPlaying: null, max: 3 });
+// Returns { queue, nowPlaying, max, sessionActive, wsStatus }
+export function useLiveQueue(roomId) {
+  const [state, setState] = useState({ queue: [], nowPlaying: null, max: 3, sessionActive: true });
   const [wsStatus, setWsStatus] = useState('connecting');
   const wsRef = useRef(null);
   const pollRef = useRef(null);
@@ -22,7 +22,7 @@ export function useLiveQueue() {
     if (pollRef.current) return;
     pollRef.current = setInterval(async () => {
       try {
-        const data = await api.queue();
+        const data = await api.queue(roomId);
         applySnapshot(data);
       } catch {}
     }, POLL_INTERVAL);
@@ -38,7 +38,10 @@ export function useLiveQueue() {
   function connect() {
     if (unmountedRef.current) return;
     setWsStatus('connecting');
-    const ws = new WebSocket(getWsUrl());
+    const wsUrl = roomId
+      ? `${getWsUrl()}?room=${encodeURIComponent(roomId)}`
+      : getWsUrl();
+    const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -59,7 +62,6 @@ export function useLiveQueue() {
       if (unmountedRef.current) return;
       setWsStatus('polling');
       startPolling();
-      // Attempt reconnect after a delay
       setTimeout(connect, RECONNECT_DELAY);
     };
   }
@@ -72,7 +74,7 @@ export function useLiveQueue() {
       wsRef.current?.close();
       stopPolling();
     };
-  }, []);
+  }, [roomId]);
 
   return { ...state, wsStatus };
 }

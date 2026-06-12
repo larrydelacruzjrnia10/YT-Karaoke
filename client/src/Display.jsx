@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useLiveQueue } from './useLiveQueue';
 import { api } from './api';
 
+// Read ?room= from the URL so the display is scoped to a specific PIN session
+const roomId = new URLSearchParams(window.location.search).get('room') || null;
+
 // The YouTube IFrame Player API is loaded once via a script tag and then
 // accessed through window.YT. The API fires window.onYouTubeIframeAPIReady
 // when ready — we resolve a promise so any code can await it.
@@ -18,7 +21,7 @@ window.onYouTubeIframeAPIReady = () => {
 };
 
 export default function Display() {
-  const { queue, nowPlaying, wsStatus } = useLiveQueue();
+  const { queue, nowPlaying, wsStatus } = useLiveQueue(roomId);
   const [started, setStarted] = useState(false);
   const [currentVideoId, setCurrentVideoId] = useState(null);
   const playerRef = useRef(null);
@@ -65,7 +68,7 @@ export default function Display() {
     if (advancingRef.current) return;
     advancingRef.current = true;
     try {
-      await api.advance();
+      await api.advance(roomId);
     } finally {
       advancingRef.current = false;
     }
