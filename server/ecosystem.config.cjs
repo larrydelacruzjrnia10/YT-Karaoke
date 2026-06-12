@@ -17,6 +17,7 @@ module.exports = {
         PORT: process.env.PORT || 3001,
         YOUTUBE_API_KEY: process.env.YOUTUBE_API_KEY || '',
         MAX_RESERVATIONS_PER_USER: process.env.MAX_RESERVATIONS_PER_USER || '3',
+        HOST_PASSWORD: process.env.HOST_PASSWORD || '',
       },
     },
   ],
