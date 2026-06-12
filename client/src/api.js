@@ -46,9 +46,10 @@ export function clearHostToken() {
 const BASE = import.meta.env.VITE_API_URL || '';
 
 async function apiFetch(path, opts = {}) {
+  const { headers: extraHeaders, ...restOpts } = opts;
   const res = await fetch(`${BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
-    ...opts,
+    headers: { 'Content-Type': 'application/json', ...(extraHeaders || {}) },
+    ...restOpts,
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
